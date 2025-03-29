@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTech - Hidden Audience Leak Finder</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #3A82F7;
+            --primary-purple: #A23AF7;
+            --dark-bg: #0D0D1A;
+            --darker-bg: #080812;
+            --light-text: #E0E0E0;
+            --lighter-text: #F5F5F5;
+            --medium-gray: #2A2A3A;
+            --success-green: #4CAF50;
+            --warning-yellow: #FFC107;
+            --danger-red: #F44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--light-text);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(58, 130, 247, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(162, 58, 247, 0.1) 0%, transparent 20%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-top: 20px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin: 20px 0;
+            color: var(--lighter-text);
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin: 15px 0;
+            color: var(--lighter-text);
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: var(--light-text);
+        }
+
+        .card {
+            background-color: var(--darker-bg);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--medium-gray);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--lighter-text);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--medium-gray);
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--light-text);
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(58, 130, 247, 0.3);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(58, 130, 247, 0.4);
+        }
+
+        .btn-secondary {
+            background-color: var(--medium-gray);
+            color: var(--light-text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #3A3A4A;
+            transform: translateY(-2px);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--darker-bg);
+            color: var(--light-text);
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid var(--medium-gray);
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .channel-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .channel-card {
+            flex: 1;
+            min-width: 250px;
+            background-color: rgba(42, 42, 58, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: var(--darker-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        th {
+            background-color: rgba(58, 130, 247, 0.2);
+            color: var(--lighter-text);
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .leak-high {
+            color: var(--danger-red);
+            font-weight: 600;
+        }
+
+        .leak-medium {
+            color: var(--warning-yellow);
+            font-weight: 600;
+        }
+
+        .leak-low {
+            color: var(--success-green);
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+            background-color: var(--darker-bg);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .insights-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .insight-card {
+            background-color: var(--darker-bg);
+            border-radius: 8px;
+            padding: 20px;
+            border-left: 4px solid var(--primary-purple);
+            transition: transform 0.3s;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .insight-card h4 {
+            margin-bottom: 10px;
+            color: var(--lighter-text);
+        }
+
+        .insight-card p {
+            font-size: 0.95rem;
+        }
+
+        .insight-card .cta {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--primary-blue);
+            font-weight: 500;
+        }
+
+        .flow-map {
+            height: 300px;
+            background-color: var(--darker-bg);
+            border-radius: 10px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .flow-step {
+            position: absolute;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .flow-connector {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-purple));
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .flow-leak {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .flow-leak:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+        }
+
+        .leak-tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            z-index: 100;
+            display: none;
+        }
+
+        .how-to-use {
+            margin-top: 50px;
+        }
+
+        .how-to-use h3 {
+            margin-bottom: 20px;
+        }
+
+        .how-to-use ol {
+            padding-left: 20px;
+        }
+
+        .how-to-use li {
+            margin-bottom: 10px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .channel-container {
+                flex-direction: column;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .insights-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="gradient-text">Hidden Audience Leak Finder</h1>
+            <p>Identify where your marketing campaigns are losing potential customers and optimize your funnel</p>
+        </header>
+
+        <div class="card">
+            <h2>Campaign Data Input</h2>
+            <p>Enter your campaign metrics for each channel to analyze audience leaks.</p>
+            
+            <div id="channel-inputs">
+                <div class="form-group">
+                    <label for="channel-name-1">Channel Name</label>
+                    <select id="channel-name-1" class="channel-name">
+                        <option value="Social Media">Social Media</option>
+                        <option value="PPC">PPC</option>
+                        <option value="Email">Email</option>
+                        <option value="Display Ads">Display Ads</option>
+                        <option value="Organic Search">Organic Search</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="visitors-1">Number of Visitors</label>
+                    <input type="number" id="visitors-1" min="0" placeholder="e.g., 10000" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="clicks-1">Number of Clicks/Engagements 
+                        <span class="tooltip">?
+                            <span class="tooltip-text">Number of visitors who clicked or engaged with your content</span>
+                        </span>
+                    </label>
+                    <input type="number" id="clicks-1" min="0" placeholder="e.g., 5000" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="conversions-1">Number of Conversions 
+                        <span class="tooltip">?
+                            <span class="tooltip-text">Number of visitors who completed the desired action (purchase, sign-up, etc.)</span>
+                        </span>
+                    </label>
+                    <input type="number" id="conversions-1" min="0" placeholder="e.g., 200" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bounce-rate-1">Bounce Rate (%) 
+                        <span class="tooltip">?
+                            <span class="tooltip-text">Percentage of visitors who left after viewing only one page</span>
+                        </span>
+                    </label>
+                    <input type="number" id="bounce-rate-1" min="0" max="100" placeholder="e.g., 40" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="exit-rate-1">Exit Rate (%) 
+                        <span class="tooltip">?
+                            <span class="tooltip-text">Percentage of visitors who left from this page (may have viewed multiple pages)</span>
+                        </span>
+                    </label>
+                    <input type="number" id="exit-rate-1" min="0" max="100" placeholder="e.g., 30" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="funnel-steps-1">Funnel Steps (Optional) 
+                        <span class="tooltip">?
+                            <span class="tooltip-text">Comma-separated values showing visitor counts at each funnel step (e.g., 10000,5000,2000,200)</span>
+                        </span>
+                    </label>
+                    <input type="text" id="funnel-steps-1" placeholder="e.g., 10000,5000,2000,200">
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="add-channel" class="btn btn-secondary">Add Another Channel</button>
+                <button id="analyze-btn" class="btn btn-primary">Analyze Leaks</button>
+                <button id="reset-btn" class="btn btn-secondary">Reset</button>
+            </div>
+        </div>
+
+        <div id="results-section" class="results-section">
+            <div class="card">
+                <h2>Leak Analysis Results</h2>
+                <p>Below are the identified leaks in your marketing funnel for each channel.</p>
+                
+                <div id="leak-summary" class="card" style="background-color: rgba(42, 42, 58, 0.7);">
+                    <h3>Leak Summary</h3>
+                    <div id="summary-content"></div>
+                </div>
+                
+                <div id="results-table-container">
+                    <h3>Channel Performance</h3>
+                    <table id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Channel</th>
+                                <th>Visitors</th>
+                                <th>Clicks</th>
+                                <th>Conversions</th>
+                                <th>Visitor-to-Click Leak</th>
+                                <th>Click-to-Conversion Leak</th>
+                                <th>Bounce Leak</th>
+                                <th>Exit Leak</th>
+                                <th>Total Leak %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            <!-- Results will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="export-pdf" class="btn btn-primary">Export to PDF</button>
+                    <button id="copy-summary" class="btn btn-secondary">Copy Leak Summary</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Audience Flow Visualization</h2>
+                <div class="chart-container">
+                    <canvas id="sankey-chart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="leak-pie-chart"></canvas>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="leak-bar-chart"></canvas>
+                </div>
+                
+                <div id="flow-map" class="flow-map">
+                    <!-- Dynamic flow map will be inserted here -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>Actionable Insights</h2>
+                <p>Based on your leak analysis, here are recommendations to improve your campaign performance:</p>
+                
+                <div id="insights-container" class="insights-container">
+                    <!-- Insights will be inserted here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="card how-to-use">
+            <h2>How to Use This Tool</h2>
+            <p>The Hidden Audience Leak Finder helps you identify where potential customers are dropping off in your marketing funnel.</p>
+            
+            <ol>
+                <li><strong>Enter your campaign data</strong> for each marketing channel you want to analyze.</li>
+                <li><strong>Click "Analyze Leaks"</strong> to calculate where you're losing audience members.</li>
+                <li><strong>Review the results</strong> including the leak summary, detailed table, and visualizations.</li>
+                <li><strong>Implement the actionable insights</strong> to optimize your funnel and reduce leaks.</li>
+                <li><strong>Export the report</strong> to share with your team or use as a reference for optimization.</li>
+            </ol>
+            
+            <p>By regularly analyzing your funnel leaks, you can systematically improve conversion rates and get more value from your marketing spend.</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const channelInputs = document.getElementById('channel-inputs');
+            const addChannelBtn = document.getElementById('add-channel');
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const resultsSection = document.getElementById('results-section');
+            const resultsBody = document.getElementById('results-body');
+            const summaryContent = document.getElementById('summary-content');
+            const exportPdfBtn = document.getElementById('export-pdf');
+            const copySummaryBtn = document.getElementById('copy-summary');
+            const insightsContainer = document.getElementById('insights-container');
+            const flowMap = document.getElementById('flow-map');
+            
+            // Chart variables
+            let sankeyChart;
+            let pieChart;
+            let barChart;
+            
+            // Channel counter
+            let channelCount = 1;
+            
+            // Add channel button click handler
+            addChannelBtn.addEventListener('click', function() {
+                if (channelCount >= 3) {
+                    alert('Maximum of 3 channels allowed for this analysis.');
+                    return;
+                }
+                
+                channelCount++;
+                
+                const newChannel = document.createElement('div');
+                newChannel.innerHTML = `
+                    <hr style="margin: 20px 0; border-color: var(--medium-gray);">
+                    <div class="form-group">
+                        <label for="channel-name-${channelCount}">Channel Name</label>
+                        <select id="channel-name-${channelCount}" class="channel-name">
+                            <option value="Social Media">Social Media</option>
+                            <option value="PPC">PPC</option>
+                            <option value="Email">Email</option>
+                            <option value="Display Ads">Display Ads</option>
+                            <option value="Organic Search">Organic Search</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="visitors-${channelCount}">Number of Visitors</label>
+                        <input type="number" id="visitors-${channelCount}" min="0" placeholder="e.g., 10000" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clicks-${channelCount}">Number of Clicks/Engagements</label>
+                        <input type="number" id="clicks-${channelCount}" min="0" placeholder="e.g., 5000" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="conversions-${channelCount}">Number of Conversions</label>
+                        <input type="number" id="conversions-${channelCount}" min="0" placeholder="e.g., 200" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bounce-rate-${channelCount}">Bounce Rate (%)</label>
+                        <input type="number" id="bounce-rate-${channelCount}" min="0" max="100" placeholder="e.g., 40" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="exit-rate-${channelCount}">Exit Rate (%)</label>
+                        <input type="number" id="exit-rate-${channelCount}" min="0" max="100" placeholder="e.g., 30" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="funnel-steps-${channelCount}">Funnel Steps (Optional)</label>
+                        <input type="text" id="funnel-steps-${channelCount}" placeholder="e.g., 10000,5000,2000,200">
+                    </div>
+                `;
+                
+                channelInputs.appendChild(newChannel);
+            });
+            
+            // Reset button click handler
+            resetBtn.addEventListener('click', function() {
+                // Reset form
+                channelInputs.innerHTML = `
+                    <div class="form-group">
+                        <label for="channel-name-1">Channel Name</label>
+                        <select id="channel-name-1" class="channel-name">
+                            <option value="Social Media">Social Media</option>
+                            <option value="PPC">PPC</option>
+                            <option value="Email">Email</option>
+                            <option value="Display Ads">Display Ads</option>
+                            <option value="Organic Search">Organic Search</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="visitors-1">Number of Visitors</label>
+                        <input type="number" id="visitors-1" min="0" placeholder="e.g., 10000" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clicks-1">Number of Clicks/Engagements</label>
+                        <input type="number" id="clicks-1" min="0" placeholder="e.g., 5000" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="conversions-1">Number of Conversions</label>
+                        <input type="number" id="conversions-1" min="0" placeholder="e.g., 200" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bounce-rate-1">Bounce Rate (%)</label>
+                        <input type="number" id="bounce-rate-1" min="0" max="100" placeholder="e.g., 40" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="exit-rate-1">Exit Rate (%)</label>
+                        <input type="number" id="exit-rate-1" min="0" max="100" placeholder="e.g., 30" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="funnel-steps-1">Funnel Steps (Optional)</label>
+                        <input type="text" id="funnel-steps-1" placeholder="e.g., 10000,5000,2000,200">
+                    </div>
+                `;
+                
+                // Reset counters
+                channelCount = 1;
+                
+                // Hide results
+                resultsSection.style.display = 'none';
+                
+                // Destroy charts if they exist
+                if (sankeyChart) {
+                    sankeyChart.destroy();
+                }
+                if (pieChart) {
+                    pieChart.destroy();
+                }
+                if (barChart) {
+                    barChart.destroy();
+                }
+                
+                // Clear flow map
+                flowMap.innerHTML = '';
+            });
+            
+            // Analyze button click handler
+            analyzeBtn.addEventListener('click', function() {
+                // Validate inputs
+                let isValid = true;
+                const channelData = [];
+                
+                for (let i = 1; i <= channelCount; i++) {
+                    const visitors = parseInt(document.getElementById(`visitors-${i}`).value);
+                    const clicks = parseInt(document.getElementById(`clicks-${i}`).value);
+                    const conversions = parseInt(document.getElementById(`conversions-${i}`).value);
+                    const bounceRate = parseInt(document.getElementById(`bounce-rate-${i}`).value);
+                    const exitRate = parseInt(document.getElementById(`exit-rate-${i}`).value);
+                    const funnelSteps = document.getElementById(`funnel-steps-${i}`).value;
+                    const channelName = document.getElementById(`channel-name-${i}`).value;
+                    
+                    // Basic validation
+                    if (isNaN(visitors) || isNaN(clicks) || isNaN(conversions) || isNaN(bounceRate) || isNaN(exitRate)) {
+                        alert(`Please fill all required fields for Channel ${i}`);
+                        isValid = false;
+                        break;
+                    }
+                    
+                    if (clicks > visitors) {
+                        alert(`For Channel ${i}: Clicks cannot be greater than Visitors`);
+                        isValid = false;
+                        break;
+                    }
+                    
+                    if (conversions > clicks) {
+                        alert(`For Channel ${i}: Conversions cannot be greater than Clicks`);
+                        isValid = false;
+                        break;
+                    }
+                    
+                    if (bounceRate < 0 || bounceRate > 100) {
+                        alert(`For Channel ${i}: Bounce Rate must be between 0 and 100`);
+                        isValid = false;
+                        break;
+                    }
+                    
+                    if (exitRate < 0 || exitRate > 100) {
+                        alert(`For Channel ${i}: Exit Rate must be between 0 and 100`);
+                        isValid = false;
+                        break;
+                    }
+                    
+                    // Parse funnel steps if provided
+                    let parsedFunnelSteps = [];
+                    if (funnelSteps) {
+                        parsedFunnelSteps = funnelSteps.split(',').map(step => parseInt(step.trim()));
+                        
+                        if (parsedFunnelSteps.some(isNaN)) {
+                            alert(`For Channel ${i}: Funnel steps must be comma-separated numbers`);
+                            isValid = false;
+                            break;
+                        }
+                        
+                        if (parsedFunnelSteps.length < 2) {
+                            alert(`For Channel ${i}: Funnel steps must include at least 2 numbers`);
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    
+                    if (isValid) {
+                        channelData.push({
+                            name: channelName,
+                            visitors,
+                            clicks,
+                            conversions,
+                            bounceRate,
+                            exitRate,
+                            funnelSteps: parsedFunnelSteps
+                        });
+                    }
+                }
+                
+                if (!isValid || channelData.length === 0) {
+                    return;
+                }
+                
+                // Calculate leaks for each channel
+                const results = channelData.map(channel => {
+                    // Calculate leaks
+                    const visitorToClickLeak = ((channel.visitors - channel.clicks) / channel.visitors) * 100;
+                    const clickToConversionLeak = ((channel.clicks - channel.conversions) / channel.clicks) * 100;
+                    const bounceLeak = (channel.bounceRate / 100) * channel.visitors;
+                    const exitLeak = (channel.exitRate / 100) * channel.visitors;
+                    
+                    // Calculate total leak percentage (weighted average)
+                    const totalLeakPercent = (
+                        (visitorToClickLeak * 0.4) + 
+                        (clickToConversionLeak * 0.3) + 
+                        ((channel.bounceRate + channel.exitRate) / 2 * 0.3)
+                    );
+                    
+                    // Calculate funnel leaks if provided
+                    const funnelLeaks = [];
+                    if (channel.funnelSteps.length > 0) {
+                        for (let i = 0; i < channel.funnelSteps.length - 1; i++) {
+                            const drop = channel.funnelSteps[i] - channel.funnelSteps[i + 1];
+                            const leakPercent = (drop / channel.funnelSteps[i]) * 100;
+                            funnelLeaks.push({
+                                fromStep: i + 1,
+                                toStep: i + 2,
+                                dropCount: drop,
+                                leakPercent: leakPercent
+                            });
+                        }
+                    }
+                    
+                    return {
+                        ...channel,
+                        visitorToClickLeak,
+                        clickToConversionLeak,
+                        bounceLeak,
+                        exitLeak,
+                        totalLeakPercent,
+                        funnelLeaks
+                    };
+                });
+                
+                // Display results
+                displayResults(results);
+                
+                // Show results section
+                resultsSection.style.display = 'block';
+                
+                // Scroll to results
+                resultsSection.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Display results function
+            function displayResults(results) {
+                // Clear previous results
+                resultsBody.innerHTML = '';
+                insightsContainer.innerHTML = '';
+                flowMap.innerHTML = '';
+                
+                // Generate table rows
+                results.forEach(result => {
+                    const row = document.createElement('tr');
+                    
+                    // Determine leak severity classes
+                    const visitorToClickClass = getLeakSeverityClass(result.visitorToClickLeak);
+                    const clickToConversionClass = getLeakSeverityClass(result.clickToConversionLeak);
+                    const bounceClass = getLeakSeverityClass(result.bounceRate);
+                    const exitClass = getLeakSeverityClass(result.exitRate);
+                    const totalClass = getLeakSeverityClass(result.totalLeakPercent);
+                    
+                    row.innerHTML = `
+                        <td>${result.name}</td>
+                        <td>${result.visitors.toLocaleString()}</td>
+                        <td>${result.clicks.toLocaleString()}</td>
+                        <td>${result.conversions.toLocaleString()}</td>
+                        <td class="${visitorToClickClass}">${result.visitorToClickLeak.toFixed(2)}%</td>
+                        <td class="${clickToConversionClass}">${result.clickToConversionLeak.toFixed(2)}%</td>
+                        <td class="${bounceClass}">${Math.round(result.bounceLeak).toLocaleString()} (${result.bounceRate}%)</td>
+                        <td class="${exitClass}">${Math.round(result.exitLeak).toLocaleString()} (${result.exitRate}%)</td>
+                        <td class="${totalClass}">${result.totalLeakPercent.toFixed(2)}%</td>
+                    `;
+                    
+                    resultsBody.appendChild(row);
+                });
+                
+                // Generate summary
+                generateSummary(results);
+                
+                // Generate insights
+                generateInsights(results);
+                
+                // Create charts
+                createCharts(results);
+                
+                // Create flow map
+                createFlowMap(results[0]); // Using first channel for flow map for simplicity
+            }
+            
+            // Get leak severity class
+            function getLeakSeverityClass(leakValue) {
+                if (leakValue >= 50) {
+                    return 'leak-high';
+                } else if (leakValue >= 20) {
+                    return 'leak-medium';
+                } else {
+                    return 'leak-low';
+                }
+            }
+            
+            // Generate summary
+            function generateSummary(results) {
+                // Find channel with highest total leak
+                const highestLeakChannel = results.reduce((prev, current) => 
+                    (prev.totalLeakPercent > current.totalLeakPercent) ? prev : current
+                );
+                
+                // Calculate total audience lost
+                const totalVisitors = results.reduce((sum, channel) => sum + channel.visitors, 0);
+                const totalLost = results.reduce((sum, channel) => {
+                    return sum + 
+                        (channel.visitors - channel.clicks) + 
+                        (channel.clicks - channel.conversions) + 
+                        channel.bounceLeak + 
+                        channel.exitLeak;
+                }, 0);
+                
+                const totalLostPercent = (totalLost / totalVisitors) * 100;
+                
+                summaryContent.innerHTML = `
+                    <p>The channel with the highest leak is <strong>${highestLeakChannel.name}</strong> with a total leak of <span class="${getLeakSeverityClass(highestLeakChannel.totalLeakPercent)}">${highestLeakChannel.totalLeakPercent.toFixed(2)}%</span>.</p>
+                    <p>Across all channels, you're losing <span class="${getLeakSeverityClass(totalLostPercent)}">${totalLostPercent.toFixed(2)}%</span> of your potential audience, which amounts to approximately <strong>${Math.round(totalLost).toLocaleString()}</strong> visitors.</p>
+                    <p>Review the detailed analysis below to identify specific leak points and optimization opportunities.</p>
+                `;
+            }
+            
+            // Generate insights
+            function generateInsights(results) {
+                const allInsights = [];
+                
+                results.forEach(channel => {
+                    // Visitor to click leak insights
+                    if (channel.visitorToClickLeak >= 50) {
+                        allInsights.push({
+                            title: `High Visitor-to-Click Leak in ${channel.name}`,
+                            description: `Your ${channel.name} channel is losing ${channel.visitorToClickLeak.toFixed(2)}% of visitors before they even engage. Consider improving ad relevance, targeting, or landing page expectations.`,
+                            cta: `GTech's audience targeting analysis can help reduce this leak by up to 30%.`
+                        });
+                    } else if (channel.visitorToClickLeak >= 20) {
+                        allInsights.push({
+                            title: `Moderate Visitor-to-Click Leak in ${channel.name}`,
+                            description: `Your ${channel.name} channel has a ${channel.visitorToClickLeak.toFixed(2)}% drop from visitors to clicks. Testing different ad creatives or value propositions might help.`,
+                            cta: `GTech's A/B testing framework can identify the most effective messaging.`
+                        });
+                    }
+                    
+                    // Click to conversion leak insights
+                    if (channel.clickToConversionLeak >= 50) {
+                        allInsights.push({
+                            title: `High Click-to-Conversion Leak in ${channel.name}`,
+                            description: `Your ${channel.name} channel is losing ${channel.clickToConversionLeak.toFixed(2)}% of engaged visitors before conversion. The checkout or signup process may be too complex.`,
+                            cta: `GTech's conversion rate optimization service can streamline your funnel.`
+                        });
+                    } else if (channel.clickToConversionLeak >= 20) {
+                        allInsights.push({
+                            title: `Moderate Click-to-Conversion Leak in ${channel.name}`,
+                            description: `Your ${channel.name} channel has a ${channel.clickToConversionLeak.toFixed(2)}% drop from clicks to conversions. Consider adding trust signals or reducing form fields.`,
+                            cta: `GTech's UX audit can pinpoint specific conversion barriers.`
+                        });
+                    }
+                    
+                    // Bounce rate insights
+                    if (channel.bounceRate >= 50) {
+                        allInsights.push({
+                            title: `High Bounce Rate in ${channel.name}`,
+                            description: `Your ${channel.name} channel has a ${channel.bounceRate}% bounce rate, meaning visitors leave without exploring. Check page load speed, mobile responsiveness, and content relevance.`,
+                            cta: `GTech's landing page optimization package can reduce bounce rates significantly.`
+                        });
+                    } else if (channel.bounceRate >= 20) {
+                        allInsights.push({
+                            title: `Moderate Bounce Rate in ${channel.name}`,
+                            description: `Your ${channel.name} channel has a ${channel.bounceRate}% bounce rate. Improving above-the-fold content and clear calls-to-action could help.`,
+                            cta: `GTech's content strategy service can make your pages more engaging.`
+                        });
+                    }
+                    
+                    // Exit rate insights
+                    if (channel.exitRate >= 50) {
+                        allInsights.push({
+                            title: `High Exit Rate in ${channel.name}`,
+                            description: `Your ${channel.name} channel has a ${channel.exitRate}% exit rate. Visitors are leaving after viewing multiple pages, suggesting missing key elements to drive conversion.`,
+                            cta: `GTech's funnel analysis can identify missing conversion triggers.`
+                        });
+                    } else if (channel.exitRate >= 20) {
+                        allInsights.push({
+                            title: `Moderate Exit Rate in ${channel.name}`,
+                            description: `Your ${channel.name} channel has a ${channel.exitRate}% exit rate. Consider adding exit-intent popups or reinforcing value propositions throughout the journey.`,
+                            cta: `GTech's behavioral targeting solutions can re-engage exiting visitors.`
+                        });
+                    }
+                    
+                    // Funnel leaks insights
+                    if (channel.funnelLeaks.length > 0) {
+                        channel.funnelLeaks.forEach((leak, index) => {
+                            if (leak.leakPercent >= 50) {
+                                allInsights.push({
+                                    title: `Major Funnel Drop in ${channel.name} (Step ${leak.fromStep}→${leak.toStep})`,
+                                    description: `You're losing ${leak.leakPercent.toFixed(2)}% of visitors between these steps. This stage needs urgent attention to prevent further audience loss.`,
+                                    cta: `GTech's step-by-step funnel optimization can address specific drop-off points.`
+                                });
+                            } else if (leak.leakPercent >= 20) {
+                                allInsights.push({
+                                    title: `Significant Funnel Drop in ${channel.name} (Step ${leak.fromStep}→${leak.toStep})`,
+                                    description: `A ${leak.leakPercent.toFixed(2)}% drop occurs here. Analyze user behavior at this stage to identify friction points.`,
+                                    cta: `GTech's heatmap and session recording tools can reveal why users drop off.`
+                                });
+                            }
+                        });
+                    }
+                });
+                
+                // Add general insights if no major leaks found
+                if (allInsights.length === 0) {
+                    allInsights.push({
+                        title: `Healthy Funnel Performance`,
+                        description: `Your marketing channels show relatively low leak rates. Focus on incremental improvements to maximize conversions.`,
+                        cta: `GTech's continuous optimization program can help you squeeze out additional performance.`
+                    });
+                }
+                
+                // Display insights
+                allInsights.forEach(insight => {
+                    const insightCard = document.createElement('div');
+                    insightCard.className = 'insight-card';
+                    insightCard.innerHTML = `
+                        <h4>${insight.title}</h4>
+                        <p>${insight.description}</p>
+                        <p class="cta">${insight.cta}</p>
+                    `;
+                    insightsContainer.appendChild(insightCard);
+                });
+            }
+            
+            // Create charts
+            function createCharts(results) {
+                // Destroy previous charts if they exist
+                if (sankeyChart) {
+                    sankeyChart.destroy();
+                }
+                if (pieChart) {
+                    pieChart.destroy();
+                }
+                if (barChart) {
+                    barChart.destroy();
+                }
+                
+                // Create simplified Sankey-like chart (using stacked bars)
+                const sankeyCtx = document.getElementById('sankey-chart').getContext('2d');
+                
+                // Prepare data for the first channel (for simplicity)
+                const primaryChannel = results[0];
+                
+                sankeyChart = new Chart(sankeyCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Visitors', 'Clicks', 'Conversions'],
+                        datasets: [
+                            {
+                                label: 'Converted',
+                                data: [
+                                    primaryChannel.visitors,
+                                    primaryChannel.clicks,
+                                    primaryChannel.conversions
+                                ],
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Lost',
+                                data: [
+                                    0,
+                                    primaryChannel.visitors - primaryChannel.clicks,
+                                    primaryChannel.clicks - primaryChannel.conversions
+                                ],
+                                backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Funnel Stage'
+                                }
+                            },
+                            y: {
+                                stacked: true,
+                                title: {
+                                    display: true,
+                                    text: 'Audience Count'
+                                },
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Audience Flow for ${primaryChannel.name}`,
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.raw.toLocaleString();
+                                        const percentage = context.datasetIndex === 0 ? 
+                                            ((context.raw / primaryChannel.visitors) * 100).toFixed(2) + '% of visitors' :
+                                            ((context.raw / primaryChannel.visitors) * 100).toFixed(2) + '% leak';
+                                        
+                                        return `${label}: ${value} (${percentage})`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Create pie chart showing leak composition for first channel
+                const pieCtx = document.getElementById('leak-pie-chart').getContext('2d');
+                
+                pieChart = new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: [
+                            'Visitor-to-Click Leak',
+                            'Click-to-Conversion Leak',
+                            'Bounce Leak',
+                            'Exit Leak'
+                        ],
+                        datasets: [{
+                            data: [
+                                primaryChannel.visitorToClickLeak,
+                                primaryChannel.clickToConversionLeak,
+                                primaryChannel.bounceRate,
+                                primaryChannel.exitRate
+                            ],
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.7)',
+                                'rgba(54, 162, 235, 0.7)',
+                                'rgba(255, 206, 86, 0.7)',
+                                'rgba(75, 192, 192, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Leak Composition for ${primaryChannel.name}`,
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw.toFixed(2);
+                                        const count = (context.raw / 100 * primaryChannel.visitors).toLocaleString();
+                                        return `${label}: ${value}% (≈${count} visitors)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Create bar chart comparing total leaks across channels
+                const barCtx = document.getElementById('leak-bar-chart').getContext('2d');
+                
+                barChart = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: results.map(channel => channel.name),
+                        datasets: [
+                            {
+                                label: 'Visitor-to-Click Leak',
+                                data: results.map(channel => channel.visitorToClickLeak),
+                                backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                            },
+                            {
+                                label: 'Click-to-Conversion Leak',
+                                data: results.map(channel => channel.clickToConversionLeak),
+                                backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                            },
+                            {
+                                label: 'Bounce Leak',
+                                data: results.map(channel => channel.bounceRate),
+                                backgroundColor: 'rgba(255, 206, 86, 0.7)'
+                            },
+                            {
+                                label: 'Exit Leak',
+                                data: results.map(channel => channel.exitRate),
+                                backgroundColor: 'rgba(75, 192, 192, 0.7)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'Marketing Channel'
+                                }
+                            },
+                            y: {
+                                stacked: false,
+                                title: {
+                                    display: true,
+                                    text: 'Leak Percentage'
+                                },
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Leak Comparison Across Channels',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.dataset.label || '';
+                                        const value = context.raw.toFixed(2);
+                                        const channel = results[context.dataIndex];
+                                        const count = (context.raw / 100 * channel.visitors).toLocaleString();
+                                        return `${label}: ${value}% (≈${count} visitors)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Create flow map visualization
+            function createFlowMap(channel) {
+                // Clear previous flow map
+                flowMap.innerHTML = '';
+                
+                // Create tooltip element
+                const tooltip = document.createElement('div');
+                tooltip.className = 'leak-tooltip';
+                flowMap.appendChild(tooltip);
+                
+                // Steps for the flow
+                const steps = [
+                    { name: 'Visitors', value: channel.visitors, color: 'rgba(58, 130, 247, 0.8)' },
+                    { name: 'Clicks', value: channel.clicks, color: 'rgba(162, 58, 247, 0.8)' },
+                    { name: 'Conversions', value: channel.conversions, color: 'rgba(75, 192, 192, 0.8)' }
+                ];
+                
+                // Calculate positions
+                const stepWidth = 100 / steps.length;
+                const maxValue = Math.max(...steps.map(step => step.value));
+                
+                // Create steps and connectors
+                steps.forEach((step, index) => {
+                    // Create step element
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'flow-step';
+                    stepElement.style.left = `${index * stepWidth}%`;
+                    stepElement.style.width = `${stepWidth}%`;
+                    stepElement.style.backgroundColor = step.color;
+                    
+                    // Add step content
+                    stepElement.innerHTML = `
+                        <div style="text-align: center;">
+                            <div style="font-weight: bold; margin-bottom: 5px;">${step.name}</div>
+                            <div>${step.value.toLocaleString()}</div>
+                        </div>
+                    `;
+                    
+                    flowMap.appendChild(stepElement);
+                    
+                    // Create connector to next step (except last step)
+                    if (index < steps.length - 1) {
+                        const connector = document.createElement('div');
+                        connector.className = 'flow-connector';
+                        connector.style.left = `${(index * stepWidth) + (stepWidth / 2)}%`;
+                        connector.style.width = `${stepWidth / 2}%`;
+                        
+                        // Calculate leak between steps
+                        const leakValue = steps[index].value - steps[index + 1].value;
+                        const leakPercent = (leakValue / steps[index].value) * 100;
+                        
+                        // Create leak indicator
+                        if (leakValue > 0) {
+                            const leakSize = Math.min(Math.max((leakValue / maxValue) * 50, 20), 50);
+                            const leak = document.createElement('div');
+                            leak.className = 'flow-leak';
+                            leak.style.width = `${leakSize}px`;
+                            leak.style.height = `${leakSize}px`;
+                            leak.style.backgroundColor = 'rgba(255, 99, 132, 0.8)';
+                            leak.style.left = `${(index * stepWidth) + (stepWidth / 2) + (stepWidth / 4)}%`;
+                            leak.style.top = '30%';
+                            leak.textContent = `${leakPercent.toFixed(0)}%`;
+                            
+                            // Add hover events for tooltip
+                            leak.addEventListener('mouseenter', function(e) {
+                                tooltip.style.display = 'block';
+                                tooltip.textContent = `Lost ${leakValue.toLocaleString()} visitors (${leakPercent.toFixed(2)}%) between ${steps[index].name} and ${steps[index + 1].name}`;
+                                tooltip.style.left = `${e.pageX - flowMap.offsetLeft + 10}px`;
+                                tooltip.style.top = `${e.pageY - flowMap.offsetTop + 10}px`;
+                            });
+                            
+                            leak.addEventListener('mouseleave', function() {
+                                tooltip.style.display = 'none';
+                            });
+                            
+                            leak.addEventListener('mousemove', function(e) {
+                                tooltip.style.left = `${e.pageX - flowMap.offsetLeft + 10}px`;
+                                tooltip.style.top = `${e.pageY - flowMap.offsetTop + 10}px`;
+                            });
+                            
+                            flowMap.appendChild(leak);
+                        }
+                        
+                        flowMap.appendChild(connector);
+                    }
+                });
+            }
+            
+            // Export to PDF
+            exportPdfBtn.addEventListener('click', function() {
+                // Create a new jsPDF instance
+                const doc = new jsPDF();
+                
+                // Add title
+                doc.setFontSize(20);
+                doc.setTextColor(58, 130, 247);
+                doc.text('GTech Leak Analysis Report', 105, 20, null, null, 'center');
+                
+                // Add date
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 30, null, null, 'center');
+                
+                // Add summary
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                const summaryLines = doc.splitTextToSize(summaryContent.textContent, 180);
+                doc.text(summaryLines, 20, 40);
+                
+                // Add space
+                doc.text(' ', 20, 60);
+                
+                // Add table
+                const headers = [
+                    "Channel", 
+                    "Visitors", 
+                    "Clicks", 
+                    "Conversions", 
+                    "V→C Leak", 
+                    "C→Con Leak", 
+                    "Bounce Leak", 
+                    "Exit Leak", 
+                    "Total Leak"
+                ];
+                
+                const rows = [];
+                document.querySelectorAll('#results-body tr').forEach(row => {
+                    const rowData = [];
+                    row.querySelectorAll('td').forEach((cell, index) => {
+                        if (index === 0) {
+                            rowData.push(cell.textContent);
+                        } else if (index === 5 || index === 6) {
+                            // Extract just the number from bounce and exit leaks
+                            const match = cell.textContent.match(/(\d+)/);
+                            rowData.push(match ? match[0] : '0');
+                        } else {
+                            rowData.push(cell.textContent.replace(/[^\d.]/g, ''));
+                        }
+                    });
+                    rows.push(rowData);
+                });
+                
+                doc.autoTable({
+                    head: [headers],
+                    body: rows,
+                    startY: 70,
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 2,
+                        overflow: 'linebreak'
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 20 },
+                        1: { cellWidth: 15 },
+                        2: { cellWidth: 15 },
+                        3: { cellWidth: 15 },
+                        4: { cellWidth: 15 },
+                        5: { cellWidth: 15 },
+                        6: { cellWidth: 15 },
+                        7: { cellWidth: 15 },
+                        8: { cellWidth: 15 }
+                    },
+                    headStyles: {
+                        fillColor: [58, 130, 247],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [240, 240, 240]
+                    },
+                    didDrawPage: function(data) {
+                        // Footer
+                        doc.setFontSize(10);
+                        doc.setTextColor(150);
+                        doc.text('Page ' + data.pageCount, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                    }
+                });
+
+                // Add charts section heading
+                const finalY = doc.lastAutoTable.finalY + 10;
+                doc.setFontSize(14);
+                doc.setTextColor(58, 130, 247);
+                doc.text('Key Visualizations', 20, finalY);
+
+                // Capture and add charts (simplified - in production you'd use html2canvas)
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('(Charts would be rendered here in full implementation)', 20, finalY + 10);
+
+                // Add insights section
+                const insightsY = finalY + 20;
+                doc.setFontSize(14);
+                doc.setTextColor(58, 130, 247);
+                doc.text('Actionable Insights', 20, insightsY);
+
+                let currentY = insightsY + 10;
+                document.querySelectorAll('.insight-card').forEach((card, index) => {
+                    if (currentY > 280) {
+                        doc.addPage();
+                        currentY = 20;
+                    }
+
+                    const title = card.querySelector('.insight-title').textContent;
+                    const text = card.querySelector('.insight-text').textContent;
+
+                    doc.setFontSize(12);
+                    doc.setTextColor(58, 130, 247);
+                    doc.text(title, 20, currentY);
+
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 0, 0);
+                    const textLines = doc.splitTextToSize(text, 170);
+                    doc.text(textLines, 20, currentY + 5);
+
+                    currentY += 5 + (textLines.length * 5) + 10;
+                });
+
+                // Add footer
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text('Generated by GTech Hidden Audience Leak Finder', 105, 287, null, null, 'center');
+
+                // Save the PDF
+                doc.save('GTech_Leak_Analysis.pdf');
+            });
+
+            // Copy summary button
+            copySummaryBtn.addEventListener('click', function() {
+                const summaryText = summaryContent.textContent;
+                navigator.clipboard.writeText(summaryText).then(() => {
+                    alert('Leak summary copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy text. Please try again.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
